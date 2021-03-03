@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">QuizButton</string>
+
+    <string name="host">Host</string>
+    <string name="client">Client</string>
+    <string name="not_connected">Not Connected</string>
+</resources>
