@@ -2,7 +2,6 @@ package com.example.quizbutton;
 
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +11,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import java.net.Socket;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -21,7 +19,9 @@ public class ButtonFragment extends Fragment {
     private TextView statusText;
     private Button button;
     private QuizClient client;
-    private Timer timer = new Timer();
+    private final Timer timer = new Timer();
+    private TimerTask resetColorTask;
+    private TimerTask resetTextTask;
     private MediaPlayer beep;
 
     @Override
@@ -66,11 +66,13 @@ public class ButtonFragment extends Fragment {
                         int placement = client.getPlacement();
                         if (placement >= 1) {
                             setButtonText("#" + placement);
+                            setButtonColor(getResources().getColor(R.color.buttonActive, null));
                             if (placement == 1) {
                                 beep.start();
                             }
                             cancel();
-                            scheduleButtonTextReset(Constants.TIME_CLIENT_PLACEMENT_RESET);
+                            scheduleButtonColorReset();
+                            scheduleButtonTextReset();
                         }
                     } else {
                         client = null;
@@ -83,28 +85,48 @@ public class ButtonFragment extends Fragment {
     }
 
     private void setStatusText(String text) {
-        statusText.post((Runnable) () -> {
-            statusText.setText(text);
-        });
+        statusText.post(() -> statusText.setText(text));
     }
 
     private void setButtonText(String text) {
-        button.post((Runnable) () -> {
-            button.setText(text);
-        });
+        button.post(() -> button.setText(text));
     }
 
     private void clearButtonText() {
         setButtonText("");
     }
 
-    private void scheduleButtonTextReset(long delay) {
-        timer.schedule(new TimerTask() {
+    private void setButtonColor(int color) {
+        button.post(() -> button.setBackgroundColor(color));
+    }
+
+    private void scheduleButtonTextReset() {
+        if (resetTextTask != null) {
+            resetTextTask.cancel();
+        }
+        resetTextTask = new TimerTask() {
             @Override
             public void run() {
-                clearButtonText();
+               clearButtonText();
+               resetTextTask = null;
             }
-        }, delay);
+        };
+        timer.schedule(resetTextTask, Constants.TIME_CLIENT_PLACEMENT_RESET);
+    }
+
+    private void scheduleButtonColorReset() {
+        if (resetColorTask != null) {
+            resetColorTask.cancel();
+        }
+        resetColorTask = new TimerTask() {
+            @Override
+            public void run() {
+                setButtonColor(getResources().getColor(R.color.buttonDefault, null));
+                resetColorTask = null;
+            }
+        };
+        timer.schedule(resetColorTask
+        , Constants.TIME_BETWEEN_ACTIVATION);
     }
 
     private void scheduleDiscoveryTasks(HostDiscovery discovery) {

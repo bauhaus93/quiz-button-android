@@ -30,9 +30,7 @@ public class SelectionFragment extends Fragment {
             NavHostFragment.findNavController(SelectionFragment.this)
                     .navigate(R.id.action_selectionFragment_to_buttonFragment);
         });
-        view.findViewById(R.id.buttonClient).setOnClickListener(view1 -> {
-            NavHostFragment.findNavController(SelectionFragment.this)
-                    .navigate(R.id.action_selectionFragment_to_buttonFragment);
-        });
+        view.findViewById(R.id.buttonClient).setOnClickListener(view1 -> NavHostFragment.findNavController(SelectionFragment.this)
+                .navigate(R.id.action_selectionFragment_to_buttonFragment));
     }
 }

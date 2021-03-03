@@ -1,11 +1,6 @@
 package com.example.quizbutton;
 
-import android.os.Build;
 import android.util.Log;
-
-import androidx.annotation.RequiresApi;
-
-import org.apache.commons.net.util.SubnetUtils;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -14,11 +9,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class QuizClient implements Runnable  {
 
-
     private Socket socket;
     private long lastActivation = new Date().getTime() - Constants.TIME_BETWEEN_ACTIVATION;
     private boolean stop = false;
-    private AtomicInteger placement = new AtomicInteger(0);
+    private final AtomicInteger placement = new AtomicInteger(0);
 
     public QuizClient(Socket host) {
         socket = host;

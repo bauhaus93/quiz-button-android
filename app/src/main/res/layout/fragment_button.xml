@@ -17,7 +17,7 @@
         android:id="@+id/buttonActivate"
         android:layout_width="300dp"
         android:layout_height="300dp"
-        android:elevation="0dp"
+        android:backgroundTint="@color/buttonDefault"
         android:textAlignment="center"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
         android:textSize="70sp"

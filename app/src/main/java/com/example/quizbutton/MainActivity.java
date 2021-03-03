@@ -3,17 +3,13 @@ package com.example.quizbutton;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
-
-import org.apache.commons.net.imap.IMAPClient;
-
-import java.net.Socket;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
     private QuizServer server;
-    private Timer timer = new Timer();
+    private final Timer timer = new Timer();
 
     public void startServer() {
         timer.schedule(new TimerTask() {
