@@ -65,10 +65,10 @@ public class HostDiscovery implements Runnable {
             result.set(ConnectionState.CONNECTED);
         } catch (ExecutionException e) {
             result.set(ConnectionState.NO_HOST_FOUND);
-            Log.e("QUIZ", "ExecutionException while ExecutorService.invokeAny");
+            Log.d("QUIZ", "No task could be executed successfully");
         } catch (InterruptedException e) {
             result.set(ConnectionState.NO_HOST_FOUND);
-            Log.e("QUIZ", "InterruptedException while ExecutorService.invokeAny");
+            Log.d("QUIZ", "Execution was interrupted");
         }
     }
 

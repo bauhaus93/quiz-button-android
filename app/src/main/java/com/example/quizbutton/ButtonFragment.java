@@ -23,6 +23,7 @@ public class ButtonFragment extends Fragment {
     private final Timer timer = new Timer();
     private TimerTask resetColorTask;
     private TimerTask resetTextTask;
+    private TimerTask discoveryTask;
     private MediaPlayer beep;
 
     @Override
@@ -45,6 +46,9 @@ public class ButtonFragment extends Fragment {
         }
         if (resetTextTask != null) {
             resetTextTask.cancel();
+        }
+        if (discoveryTask != null) {
+            discoveryTask.cancel();
         }
         QuizServer.destroy();
     }
@@ -152,7 +156,7 @@ public class ButtonFragment extends Fragment {
     }
 
     private void scheduleDiscoveryTasks(HostDiscovery discovery) {
-        timer.schedule(new TimerTask() {
+        discoveryTask = new TimerTask() {
             @Override
             public void run() {
                 ConnectionState state = discovery.getState();
@@ -184,7 +188,8 @@ public class ButtonFragment extends Fragment {
                         break;
                 }
             }
-        }, 500, 500);
+        };
+        timer.schedule(discoveryTask, 500, 500);
     }
 
 
