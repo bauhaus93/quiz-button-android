@@ -25,20 +25,13 @@ public class HostDiscovery implements Runnable {
     Socket foundHostSocket;
     final short targetPort;
     final AtomicBoolean foundHost = new AtomicBoolean(false);
-    final AtomicBoolean discoveryActive = new AtomicBoolean(false);
-    final AtomicReference<String> result = new AtomicReference<>("Host discovery...");
+    final AtomicReference<ConnectionState> result = new AtomicReference<>(ConnectionState.NOT_CONNECTED);
 
     public HostDiscovery(short targetPort) {
         this.targetPort = targetPort;
     }
 
-    public boolean foundHost() {
-        return foundHost.get();
-    }
-    public boolean isActive() {
-        return discoveryActive.get();
-    }
-    public String getResultText() {
+    public ConnectionState getState() {
         return result.get();
     }
     public synchronized Socket getHost() {
@@ -47,11 +40,10 @@ public class HostDiscovery implements Runnable {
 
     @Override
     public synchronized void run() {
-        discoveryActive.set(true);
+        result.set(ConnectionState.HOST_DISCOVERY);
         SubnetUtils.SubnetInfo subnetInfo = getWifiSubnet();
         if (subnetInfo == null) {
-            result.set("No wifi found");
-            discoveryActive.set(false);
+            result.set(ConnectionState.NO_WIFI_FOUND);
             return;
         }
         Log.i("QUIZ", "subnet:"  + subnetInfo.getCidrSignature());
@@ -70,16 +62,14 @@ public class HostDiscovery implements Runnable {
         }
         try {
             foundHostSocket = executor.invokeAny(tasks);
-            result.set("Connected");
-            foundHost.set(true);
+            result.set(ConnectionState.CONNECTED);
         } catch (ExecutionException e) {
-            result.set("No host found");
+            result.set(ConnectionState.NO_HOST_FOUND);
             Log.e("QUIZ", "ExecutionException while ExecutorService.invokeAny");
         } catch (InterruptedException e) {
-            result.set("No host found");
+            result.set(ConnectionState.NO_HOST_FOUND);
             Log.e("QUIZ", "InterruptedException while ExecutorService.invokeAny");
         }
-        discoveryActive.set(false);
     }
 
     private SubnetUtils.SubnetInfo getWifiSubnet() {

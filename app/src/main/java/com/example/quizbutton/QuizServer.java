@@ -13,11 +13,36 @@ import java.util.Date;
 
 public class QuizServer implements Runnable {
 
+    private static QuizServer instance;
     private long lastActivation = new Date().getTime() - Constants.TIME_BETWEEN_ACTIVATION;
     int currPlacement = 0;
     Selector selector;
     ServerSocketChannel serverSocket;
     volatile boolean stop =  false;
+
+    private QuizServer() {
+    }
+
+    public static QuizServer getInstance() {
+        if (QuizServer.instance == null) {
+            Log.d("QUIZ", "Creating new QuizServer singleton");
+            QuizServer.instance = new QuizServer();
+        }
+        return QuizServer.instance;
+    }
+
+    public static void start() {
+        Thread thread = new Thread(QuizServer.getInstance());
+        thread.start();
+    }
+
+    public static void destroy() {
+        if (QuizServer.instance != null) {
+            Log.d("QUIZ", "Destroying QuizServer singleton");
+            QuizServer.instance.stop();
+            QuizServer.instance = null;
+        }
+    }
 
     public void stop() {
         stop = true;
@@ -25,7 +50,7 @@ public class QuizServer implements Runnable {
 
     @Override
     public void run() {
-        Log.i("QUIZ", "Starting quiz server");
+        Log.d("QUIZ", "Starting quiz server");
         try {
             setupServer();
         } catch (IOException e) {
@@ -48,7 +73,7 @@ public class QuizServer implements Runnable {
             selector.selectedKeys().clear();
         }
         closeChannels();
-        Log.i("QUIZ", "Stopped server thread");
+        Log.d("QUIZ", "Stopped server thread");
     }
 
     private void setupServer() throws IOException {
@@ -67,6 +92,12 @@ public class QuizServer implements Runnable {
                 e.printStackTrace();
             }
         }
+        try {
+            selector.close();
+            serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private boolean activationPossible() {
@@ -78,7 +109,7 @@ public class QuizServer implements Runnable {
             SocketChannel client = serverSocket.accept();
                 client.configureBlocking(false);
                 client.register(selector, SelectionKey.OP_READ);
-                Log.i("QUIZ", "Register new client");
+                Log.d("QUIZ", "Register new client:" + client.getRemoteAddress());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -87,7 +118,7 @@ public class QuizServer implements Runnable {
     private void handleReadKey(SelectionKey key) {
         SocketChannel client = (SocketChannel)key.channel();
         ByteBuffer buffer = ByteBuffer.allocate(1);
-        Log.i("QUIZ", "Got key for read");
+        Log.d("QUIZ", "Got key for read");
         try {
             if (client.read(buffer) == -1) {
                 client.close();
@@ -98,14 +129,14 @@ public class QuizServer implements Runnable {
                     lastActivation = new Date().getTime();
                     currPlacement = 0;
                 }
-                Log.i("QUIZ", "ACTIVATE!");
+                Log.d("QUIZ", "Activation invoked");
                 currPlacement++;
                 buffer.put(0, (byte)currPlacement);
                 client.write(buffer);
             }
         } catch (IOException e) {
             key.cancel();
-            Log.i("QUIZ", "Cancel key");
+            Log.d("QUIZ", "Cancel key");
         }
     }
 }

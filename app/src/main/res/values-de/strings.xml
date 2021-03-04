@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">QuizButton</string>
+
+    <string name="host">Host</string>
+    <string name="client">Client</string>
+    <string name="not_connected">Nicht verbunden</string>
+    <string name="connected">Verbunden</string>
+    <string name="no_wifi_found">Kein WLAN gefunden</string>
+    <string name="no_host_found">Keinen Host gefunden</string>
+    <string name="host_discovery_active">Suche Host...</string>
+</resources>

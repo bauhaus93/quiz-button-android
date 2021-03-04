@@ -53,7 +53,7 @@ public class QuizClient implements Runnable  {
                     cycle();
                 }
             } catch (IOException e) {
-                Log.e("QUIZ", "Disconnected socket!");
+                Log.d("QUIZ", "Disconnected socket!");
                 socket = null;
                 stop = true;
             } catch (InterruptedException e) {
@@ -68,7 +68,7 @@ public class QuizClient implements Runnable  {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Log.i("QUIZ", "Stopped client thread");
+        Log.d("QUIZ", "Stopped client thread");
     }
 
     private synchronized void cycle() throws IOException  {

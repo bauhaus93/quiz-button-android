@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -33,6 +34,21 @@ public class ButtonFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_button, container, false);
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (beep != null) {
+            beep.release();
+        }
+        if (resetColorTask != null) {
+            resetColorTask.cancel();
+        }
+        if (resetTextTask != null) {
+            resetTextTask.cancel();
+        }
+        QuizServer.destroy();
+    }
+
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
@@ -54,7 +70,9 @@ public class ButtonFragment extends Fragment {
         HostDiscovery discovery = new HostDiscovery(Constants.HOST_PORT);
         Thread discoverThread = new Thread(discovery);
         discoverThread.start();
+
         scheduleDiscoveryTasks(discovery);
+        setStatusText(getResources().getString(R.string.host_discovery_active));
     }
 
     private boolean buttonCallback() {
@@ -86,6 +104,10 @@ public class ButtonFragment extends Fragment {
 
     private void setStatusText(String text) {
         statusText.post(() -> statusText.setText(text));
+    }
+
+    private void setStatusTextColor(int color) {
+        statusText.post(() -> statusText.setTextColor(color));
     }
 
     private void setButtonText(String text) {
@@ -133,18 +155,33 @@ public class ButtonFragment extends Fragment {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                if (discovery.foundHost()) {
-                    client = new QuizClient(discovery.getHost());
-                    Thread clientThread = new Thread(client);
-                    clientThread.start();
-                    setStatusText(discovery.getResultText());
-                    cancel();
-                } else if (!discovery.isActive()) {
-                    client = null;
-                    setStatusText(discovery.getResultText());
-                    cancel();
-                } else {
-                    setStatusText(discovery.getResultText());
+                ConnectionState state = discovery.getState();
+                switch(discovery.getState()) {
+                    case CONNECTED:
+                        client = new QuizClient(discovery.getHost());
+                        Thread clientThread = new Thread(client);
+                        clientThread.start();
+                        setStatusText(getResources().getString(R.string.connected));
+                        cancel();
+                        break;
+                    case NO_HOST_FOUND:
+                    case NO_WIFI_FOUND:
+                        Bundle bundle = new Bundle();
+                        String error;
+                        if (state == ConnectionState.NO_WIFI_FOUND) {
+                            error = getResources().getString(R.string.no_wifi_found);
+                        } else {
+                            error = getResources().getString(R.string.no_host_found);
+                        }
+                        bundle.putString("discovery_error", error);
+                        Navigation.findNavController(getView()).navigate(R.id.action_buttonFragment_to_selectionFragment, bundle);
+                        client = null;
+
+                        setStatusTextColor(getResources().getColor(R.color.red, null));
+                        cancel();
+                        break;
+                    default:
+                        break;
                 }
             }
         }, 500, 500);
