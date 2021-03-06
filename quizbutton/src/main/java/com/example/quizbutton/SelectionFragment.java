@@ -1,9 +1,6 @@
 package com.example.quizbutton;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,9 +32,9 @@ public class SelectionFragment extends Fragment {
         textError = view.findViewById(R.id.textError);
         Bundle bundle = getArguments();
         if (bundle != null) {
-            String error = bundle.getString("discovery_error");
+            String error = bundle.getString("connection_error");
             if (error != null) {
-                handleDiscoveryError(error);
+                handleConnectionError(error);
                 bundle.clear();
             }
         }
@@ -46,7 +43,7 @@ public class SelectionFragment extends Fragment {
 
 
         view.findViewById(R.id.buttonHost).setOnClickListener(view1 -> {
-            QuizServer.start();
+            QuizServer.getInstance();
             NavHostFragment.findNavController(SelectionFragment.this)
                     .navigate(R.id.action_selectionFragment_to_buttonFragment);
         });
@@ -54,7 +51,7 @@ public class SelectionFragment extends Fragment {
                 .navigate(R.id.action_selectionFragment_to_buttonFragment));
     }
 
-    private void handleDiscoveryError(String error) {
+    private void handleConnectionError(String error) {
         setErrorText(error);
         showErrorText();
         timer.schedule(new TimerTask() {

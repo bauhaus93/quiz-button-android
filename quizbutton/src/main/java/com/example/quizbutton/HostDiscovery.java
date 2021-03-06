@@ -12,19 +12,16 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class HostDiscovery implements Runnable {
 
-    Socket foundHostSocket;
+    final AtomicReference<Socket> foundHostSocket = new AtomicReference<>(null);
     final short targetPort;
-    final AtomicBoolean foundHost = new AtomicBoolean(false);
     final AtomicReference<ConnectionState> result = new AtomicReference<>(ConnectionState.NOT_CONNECTED);
 
     public HostDiscovery(short targetPort) {
@@ -34,34 +31,37 @@ public class HostDiscovery implements Runnable {
     public ConnectionState getState() {
         return result.get();
     }
-    public synchronized Socket getHost() {
-        return foundHostSocket;
+    public  Socket getHost() {
+        return foundHostSocket.get();
     }
 
     @Override
-    public synchronized void run() {
+    public void run() {
         result.set(ConnectionState.HOST_DISCOVERY);
         SubnetUtils.SubnetInfo subnetInfo = getWifiSubnet();
         if (subnetInfo == null) {
             result.set(ConnectionState.NO_WIFI_FOUND);
             return;
         }
-        Log.i("QUIZ", "subnet:"  + subnetInfo.getCidrSignature());
+        Log.d("QUIZ", "subnet:"  + subnetInfo.getCidrSignature());
         String[] addresses = subnetInfo.getAllAddresses();
         ExecutorService executor = Executors.newFixedThreadPool(20);
-        List<Callable<Socket>> tasks = new ArrayList<>();
+        ArrayList<Callable<Void>> tasks = new ArrayList<>();
         for(String addr: addresses) {
             tasks.add(() -> {
                 Socket socket = new Socket();
                 socket.connect(new InetSocketAddress(addr, targetPort), Constants.HOST_DISCOVERY_CONNECTION_TIMEOUT);
                 if (socket.isConnected()) {
-                    return socket;
+                    if (!foundHostSocket.compareAndSet(null, socket)) {
+                        socket.close();
+                    }
+                    return null;
                 }
                 throw new Exception("Socket not connected");
             });
         }
         try {
-            foundHostSocket = executor.invokeAny(tasks);
+            executor.invokeAny(tasks);
             result.set(ConnectionState.CONNECTED);
         } catch (ExecutionException e) {
             result.set(ConnectionState.NO_HOST_FOUND);
@@ -80,7 +80,7 @@ public class HostDiscovery implements Runnable {
                     continue;
                 }
 
-                Log.i("QUIZ", "interface: " + curr.getName());
+                Log.d("QUIZ", "interface: " + curr.getName());
                 for (final InterfaceAddress addr : curr.getInterfaceAddresses()) {
                     if (addr.getAddress() instanceof Inet4Address) {
                         final Inet4Address inetAddr = (Inet4Address) addr.getAddress();

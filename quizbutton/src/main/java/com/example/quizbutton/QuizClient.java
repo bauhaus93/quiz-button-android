@@ -53,11 +53,11 @@ public class QuizClient implements Runnable  {
                     cycle();
                 }
             } catch (IOException e) {
-                Log.d("QUIZ", "Disconnected socket!");
+                Log.d("QUIZ", "Client got disconnected");
                 socket = null;
                 stop = true;
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Log.e("QUIZ", "Client loop got interrupted");
             }
         }
         try {
@@ -66,7 +66,7 @@ public class QuizClient implements Runnable  {
                 socket = null;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e("QUIZ", "Client couldn't close socket on termination");
         }
         Log.d("QUIZ", "Stopped client thread");
     }

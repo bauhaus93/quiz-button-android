@@ -5,6 +5,8 @@
     <string name="client">Client</string>
     <string name="not_connected">Nicht verbunden</string>
     <string name="connected">Verbunden</string>
+    <string name="disconnected">Verbindung zu Host verloren</string>
+    <string name="host_error">Host wurde beendet</string>
     <string name="no_wifi_found">Kein WLAN gefunden</string>
     <string name="no_host_found">Keinen Host gefunden</string>
     <string name="host_discovery_active">Suche Host...</string>

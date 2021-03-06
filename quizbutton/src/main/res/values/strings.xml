@@ -5,6 +5,8 @@
     <string name="client">Client</string>
     <string name="not_connected">Not Connected</string>
     <string name="connected">Connected</string>
+    <string name="disconnected">Disconnected from Host</string>
+    <string name="host_error">Host got terminated</string>
     <string name="no_wifi_found">No wifi found</string>
     <string name="no_host_found">No host found</string>
     <string name="host_discovery_active">Host discovery...</string>

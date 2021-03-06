@@ -2,6 +2,7 @@ package com.example.quizbutton;
 
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,8 +25,23 @@ public class ButtonFragment extends Fragment {
     private TimerTask resetColorTask;
     private TimerTask resetTextTask;
     private TimerTask discoveryTask;
+    private TimerTask connectionCheckTask;
     private MediaPlayer beep;
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        startClient();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (client != null) {
+            client.stop();
+            client = null;
+        }
+    }
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container,
@@ -50,6 +66,9 @@ public class ButtonFragment extends Fragment {
         if (discoveryTask != null) {
             discoveryTask.cancel();
         }
+        if (connectionCheckTask != null) {
+            connectionCheckTask.cancel();
+        }
         QuizServer.destroy();
     }
 
@@ -59,15 +78,6 @@ public class ButtonFragment extends Fragment {
         statusText = view.findViewById(R.id.textConnection);
         button = view.findViewById(R.id.buttonActivate);
         button.setOnTouchListener((view1, event) -> buttonCallback());
-        startClient();
-    }
-
-    public void onStop() {
-        super.onStop();
-        if (client != null) {
-            client.stop();
-            client = null;
-        }
     }
 
     private void startClient() {
@@ -98,6 +108,9 @@ public class ButtonFragment extends Fragment {
                         }
                     } else {
                         client = null;
+                        Bundle bundle = new Bundle();
+                        bundle.putString("connection_error", getResources().getString(R.string.not_connected));
+                        Navigation.findNavController(getView()).navigate(R.id.action_buttonFragment_to_selectionFragment, bundle);
                         cancel();
                     }
                 }
@@ -155,6 +168,24 @@ public class ButtonFragment extends Fragment {
         , Constants.TIME_BETWEEN_ACTIVATION);
     }
 
+    private void scheduleConnectionCheckTask() {
+        connectionCheckTask = new TimerTask() {
+            @Override
+            public void run() {
+                if(QuizServer.hasStopped()) {
+                    Bundle bundle = new Bundle();
+                    bundle.putString("connection_error", getResources().getString(R.string.host_error));
+                    Navigation.findNavController(getView()).navigate(R.id.action_buttonFragment_to_selectionFragment, bundle);
+                } else if (client == null || !client.isConnected()) {
+                    Bundle bundle = new Bundle();
+                    bundle.putString("connection_error", getResources().getString(R.string.disconnected));
+                    Navigation.findNavController(getView()).navigate(R.id.action_buttonFragment_to_selectionFragment, bundle);
+                }
+            }
+        };
+        timer.schedule(connectionCheckTask, Constants.CONNECTIVITY_CHECK_INTERVAL, Constants.CONNECTIVITY_CHECK_INTERVAL);
+    }
+
     private void scheduleDiscoveryTasks(HostDiscovery discovery) {
         discoveryTask = new TimerTask() {
             @Override
@@ -167,6 +198,7 @@ public class ButtonFragment extends Fragment {
                         clientThread.start();
                         setStatusText(getResources().getString(R.string.connected));
                         cancel();
+                        scheduleConnectionCheckTask();
                         break;
                     case NO_HOST_FOUND:
                     case NO_WIFI_FOUND:
@@ -177,7 +209,7 @@ public class ButtonFragment extends Fragment {
                         } else {
                             error = getResources().getString(R.string.no_host_found);
                         }
-                        bundle.putString("discovery_error", error);
+                        bundle.putString("connection_error", error);
                         Navigation.findNavController(getView()).navigate(R.id.action_buttonFragment_to_selectionFragment, bundle);
                         client = null;
 
