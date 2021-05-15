@@ -10,15 +10,16 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class QuizServer implements Runnable {
 
     private static QuizServer instance;
     private long lastActivation = new Date().getTime() - Constants.TIME_BETWEEN_ACTIVATION;
-    int currPlacement = 0;
-    Selector selector;
-    ServerSocketChannel serverSocket;
-    volatile boolean stop = false;
+    private int currPlacement = 0;
+    private Selector selector;
+    private ServerSocketChannel serverSocket;
+    private final AtomicBoolean stop = new AtomicBoolean(false);
 
     private QuizServer() {
         Thread thread = new Thread(this);
@@ -38,7 +39,7 @@ public class QuizServer implements Runnable {
     }
 
     public static boolean hasStopped() {
-        return QuizServer.instance != null && QuizServer.instance.stop;
+        return QuizServer.instance != null && QuizServer.instance.stop.get();
     }
 
     public static void destroy() {
@@ -50,7 +51,7 @@ public class QuizServer implements Runnable {
     }
 
     public void stop() {
-        stop = true;
+        stop.set(true);
     }
 
     @Override
@@ -62,12 +63,12 @@ public class QuizServer implements Runnable {
             Log.e("QUIZ", "Couldn't setup server");
             return;
         }
-        while (!stop) {
+        while (!stop.get()) {
             try {
                 selector.select(1000);
             } catch (IOException e) {
                 Log.e("QUIZ" ,"Server error on selection");
-                stop = true;
+                stop();
                 break;
             }
             for (SelectionKey key: selector.selectedKeys()) {
@@ -140,8 +141,7 @@ public class QuizServer implements Runnable {
         if (client.read(buffer) == -1) {
             Log.d("QUIZ", "Client closed connection");
             client.close();
-        }
-        if (buffer.get(0) == 1){
+        } else if (buffer.get(0) == 1){
             buffer.clear();
             if (activationPossible()) {
                 lastActivation = new Date().getTime();

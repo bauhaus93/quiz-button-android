@@ -1,8 +1,8 @@
 package com.example.quizbutton;
 
+import android.content.res.Resources;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -172,14 +172,18 @@ public class ButtonFragment extends Fragment {
         connectionCheckTask = new TimerTask() {
             @Override
             public void run() {
-                if(QuizServer.hasStopped()) {
-                    Bundle bundle = new Bundle();
-                    bundle.putString("connection_error", getResources().getString(R.string.host_error));
-                    Navigation.findNavController(getView()).navigate(R.id.action_buttonFragment_to_selectionFragment, bundle);
-                } else if (client == null || !client.isConnected()) {
-                    Bundle bundle = new Bundle();
-                    bundle.putString("connection_error", getResources().getString(R.string.disconnected));
-                    Navigation.findNavController(getView()).navigate(R.id.action_buttonFragment_to_selectionFragment, bundle);
+                Resources res = getResources();
+                View view = getView();
+                if (view != null) {
+                    if(QuizServer.hasStopped()) {
+                        Bundle bundle = new Bundle();
+                        bundle.putString("connection_error", res != null ? res.getString(R.string.host_error):"Host error");
+                        Navigation.findNavController(view).navigate(R.id.action_buttonFragment_to_selectionFragment, bundle);
+                    } else if (client == null || !client.isConnected()) {
+                        Bundle bundle = new Bundle();
+                        bundle.putString("connection_error", res != null ? res.getString(R.string.disconnected):"Client disconnected");
+                        Navigation.findNavController(view).navigate(R.id.action_buttonFragment_to_selectionFragment, bundle);
+                    }
                 }
             }
         };

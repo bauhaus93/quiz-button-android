@@ -20,12 +20,15 @@ public class SelectionFragment extends Fragment {
 
     @Override
     public View onCreateView(
-            LayoutInflater inflater, ViewGroup container,
+            @NonNull LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState
     ) {
+        super.onCreateView(inflater, container, savedInstanceState);
+        QuizServer.destroy();
         return inflater.inflate(R.layout.fragment_selection, container, false);
     }
 
+    @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
@@ -38,9 +41,6 @@ public class SelectionFragment extends Fragment {
                 bundle.clear();
             }
         }
-
-        QuizServer.destroy();
-
 
         view.findViewById(R.id.buttonHost).setOnClickListener(view1 -> {
             QuizServer.getInstance();
