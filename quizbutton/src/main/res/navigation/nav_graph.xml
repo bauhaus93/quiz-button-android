@@ -5,7 +5,7 @@
     app:startDestination="@id/selectionFragment">
     <fragment
         android:id="@+id/selectionFragment"
-        android:name="com.example.quizbutton.SelectionFragment"
+        android:name="com.shadowrulor.quizbutton.SelectionFragment"
         android:label="SelectionFragment" >
         <action
             android:id="@+id/action_selectionFragment_to_buttonFragment"
@@ -13,7 +13,7 @@
     </fragment>
     <fragment
         android:id="@+id/buttonFragment"
-        android:name="com.example.quizbutton.ButtonFragment"
+        android:name="com.shadowrulor.quizbutton.ButtonFragment"
         android:label="ButtonFragment" >
         <action
             android:id="@+id/action_buttonFragment_to_selectionFragment"
