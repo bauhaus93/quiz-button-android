@@ -12,6 +12,8 @@ import java.nio.channels.SocketChannel;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.shadowrulor.quizbutton.Constants.SELECTION_TIMEOUT;
+
 public class QuizServer implements Runnable {
 
     private static QuizServer instance;
@@ -65,13 +67,13 @@ public class QuizServer implements Runnable {
         }
         while (!stop.get()) {
             try {
-                selector.select(1000);
+                selector.select(SELECTION_TIMEOUT);
             } catch (IOException e) {
-                Log.e("QUIZ" ,"Server error on selection");
+                Log.e("QUIZ", "Server error on selection");
                 stop();
                 break;
             }
-            for (SelectionKey key: selector.selectedKeys()) {
+            for (SelectionKey key : selector.selectedKeys()) {
                 try {
                     if (key.isAcceptable()) {
                         handleAccept();
@@ -103,7 +105,7 @@ public class QuizServer implements Runnable {
 
     private void closeChannels() {
         if (selector != null) {
-            for(SelectionKey key: selector.keys()) {
+            for (SelectionKey key : selector.keys()) {
                 try {
                     key.channel().close();
                 } catch (IOException e) {
@@ -129,19 +131,19 @@ public class QuizServer implements Runnable {
 
     private void handleAccept() throws IOException {
         SocketChannel client = serverSocket.accept();
-            client.configureBlocking(false);
-            client.register(selector, SelectionKey.OP_READ);
-            Log.d("QUIZ", "Register new client: " + client.getRemoteAddress().toString().substring(1));
+        client.configureBlocking(false);
+        client.register(selector, SelectionKey.OP_READ);
+        Log.d("QUIZ", "Register new client: " + client.getRemoteAddress().toString().substring(1));
     }
 
     private void handleReadKey(SelectionKey key) throws IOException {
-        SocketChannel client = (SocketChannel)key.channel();
+        SocketChannel client = (SocketChannel) key.channel();
         ByteBuffer buffer = ByteBuffer.allocate(1);
         Log.d("QUIZ", "Got key for read");
         if (client.read(buffer) == -1) {
             Log.d("QUIZ", "Client closed connection");
             client.close();
-        } else if (buffer.get(0) == 1){
+        } else if (buffer.get(0) == 1) {
             buffer.clear();
             if (activationPossible()) {
                 lastActivation = new Date().getTime();
@@ -149,7 +151,7 @@ public class QuizServer implements Runnable {
             }
             Log.d("QUIZ", "Activation invoked");
             currPlacement++;
-            buffer.put(0, (byte)currPlacement);
+            buffer.put(0, (byte) currPlacement);
             client.write(buffer);
         }
     }
