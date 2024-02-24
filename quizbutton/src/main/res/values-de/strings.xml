@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">QuizButton</string>
+    <string name="app_name">SimpleBuzz</string>
 
     <string name="host">Host</string>
     <string name="client">Client</string>
